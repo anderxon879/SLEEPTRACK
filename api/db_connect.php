@@ -1,20 +1,26 @@
 <?php
+// CONEXIÓN: Conecta con MySQL ('sleeptrack') en XAMPP y crea tablas automáticamente si no existen.
+
+// Parámetros de conexión a MySQL en XAMPP
 $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "sleeptrack";
 
+// ESTO SIRVE PARA: Crear el objeto de conexión mysqli con el motor de base de datos
 $conn = new mysqli($servername, $username, $password);
 
+// ESTO SIRVE PARA: Verificar si hubo algún problema al conectar con el servidor MySQL
 if ($conn->connect_error) {
     header('Content-Type: application/json; charset=UTF-8');
     echo json_encode(["status" => "error", "message" => "Error de conexión a MySQL: " . $conn->connect_error]);
     exit();
 }
 
+// ESTO SIRVE PARA: Crear automáticamente la base de datos si aún no existe y seleccionarla
 $conn->query("CREATE DATABASE IF NOT EXISTS $dbname CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
 $conn->select_db($dbname);
-$conn->set_charset("utf8mb4");
+$conn->set_charset("utf8mb4"); // Soporte completo para caracteres en español (tildes, ñ)
 
 $conn->query("CREATE TABLE IF NOT EXISTS cuentas (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -1,9 +1,11 @@
 <?php
+// PERFIL: Devuelve datos del estudiante y estadísticas globales (total noches, promedios) con COUNT y AVG en SQL.
 header('Content-Type: application/json; charset=UTF-8');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 
+// ESTO SIRVE PARA: Conectarse a MySQL
 include 'db_connect.php';
 
 $json = file_get_contents('php://input');

@@ -31,16 +31,20 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+// PANTALLA: Calendario mensual interactivo. Pinta cada día con colores según la calidad y muestra tarjeta de detalle.
 public class HistorialMensualActivity extends AppCompatActivity {
 
+    // ESTO SIRVE PARA: Declarar botones de navegación, títulos del mes y la cuadrícula GridLayout del calendario
     View ivVolver, btnIrGraficos;
     ImageView btnMesAnterior, btnMesSiguiente;
     TextView tvMesVal, tvMalaCalidad, tvUsoPantalla;
     GridLayout gridCalendario;
 
+    // ESTO SIRVE PARA: Tarjeta flotante que se despliega al tocar un día para ver su detalle de sueño
     View cardDetalleDia;
     TextView tvDetalleFecha, tvDetalleCalidad, tvDetalleDuracion, tvDetallePantalla;
 
+    // ESTO SIRVE PARA: Gestionar el año y mes seleccionado en el calendario
     private int anioActual;
     private int mesActualIndex;
     private int diaSeleccionado = -1;
@@ -51,17 +55,20 @@ public class HistorialMensualActivity extends AppCompatActivity {
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     };
 
+    // Almacena en memoria los registros indexados por fecha (YYYY-MM-DD)
     private Map<String, JSONObject> registrosPorFecha = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // ESTO SIRVE PARA: Cargar el layout XML del calendario mensual
         setContentView(R.layout.activity_hu17_hu18_historial_mensual);
 
         Calendar now = Calendar.getInstance();
         anioActual = now.get(Calendar.YEAR);
         mesActualIndex = now.get(Calendar.MONTH);
 
+        // ESTO SIRVE PARA: Enlazar los elementos visuales del calendario con Java
         ivVolver = findViewById(R.id.iv_hu17_volver);
         btnIrGraficos = findViewById(R.id.btn_hu17_ir_graficos);
         btnMesAnterior = findViewById(R.id.btn_mes_anterior);
@@ -77,6 +84,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
         tvDetalleDuracion = findViewById(R.id.tv_detalle_duracion);
         tvDetallePantalla = findViewById(R.id.tv_detalle_pantalla);
 
+        // ESTO SIRVE PARA: Abrir la encuesta si el alumno toca la tarjeta de detalle diario
         if (cardDetalleDia != null) {
             cardDetalleDia.setOnClickListener(v -> {
                 v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK);
@@ -89,6 +97,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
             ivVolver.setOnClickListener(v -> volverAInicio());
         }
 
+        // ESTO SIRVE PARA: Botón directo para pasar a ver los gráficos semanales
         if (btnIrGraficos != null) {
             btnIrGraficos.setOnClickListener(v -> {
                 Intent intent = new Intent(this, AnalisisSemanalActivity.class);
@@ -97,6 +106,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
             });
         }
 
+        // ESTO SIRVE PARA: Deslizar hacia abajo para refrescar los días del mes
         SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipe_refresh_historial);
         if (swipeRefresh != null) {
             swipeRefresh.setColorSchemeResources(R.color.primary, R.color.accent_mint);
@@ -109,6 +119,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
 
         actualizarTituloMes();
 
+        // ESTO SIRVE PARA: Botón para navegar al mes anterior
         if (btnMesAnterior != null) {
             btnMesAnterior.setOnClickListener(v -> {
                 diaSeleccionado = -1;
@@ -165,16 +176,19 @@ public class HistorialMensualActivity extends AppCompatActivity {
         BottomNavHelper.setup(this, R.id.nav_historial);
     }
 
+    // ESTO SIRVE PARA: Actualizar la etiqueta del mes y año visible en la cabecera del calendario
     private void actualizarTituloMes() {
         if (tvMesVal != null) {
             tvMesVal.setText(mesesNombres[mesActualIndex] + " " + anioActual);
         }
     }
 
+    // ESTO SIRVE PARA: Consultar al backend PHP (api/obtener_historial.php) los registros del mes con Volley
     private void cargarHistorial() {
         SharedPreferences prefs = getSharedPreferences("SleepTrackPrefs", MODE_PRIVATE);
         String correo = prefs.getString("correo_usuario", "");
 
+        // ESTO SIRVE PARA: Cargar en el mapa el registro local de la noche actual si existe
         cargarRegistroLocalHoy();
 
         if (correo.isEmpty()) {
@@ -183,6 +197,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
             return;
         }
 
+        // Endpoint en XAMPP que realiza el SELECT de todos los registros del mes para el usuario
         String url = "http://192.168.3.225/SLEEPTRACKAPP/api/obtener_historial.php";
 
         JSONObject requestData = new JSONObject();
@@ -194,6 +209,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        // ESTO SIRVE PARA: Petición HTTP POST que recibe el arreglo de noches registradas
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, requestData,
                 response -> {
                     try {
@@ -227,6 +243,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 
+    // ESTO SIRVE PARA: Leer de SharedPreferences la última noche monitoreada y mostrarla de inmediato en el calendario
     private void cargarRegistroLocalHoy() {
         SharedPreferences prefs = getSharedPreferences("SleepTrackPrefs", MODE_PRIVATE);
         long finMillis = prefs.getLong("ultimo_monitoreo_fin", 0);
@@ -249,6 +266,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
         }
     }
 
+    // ESTO SIRVE PARA: Contabilizar noches de mala calidad y uso excesivo de pantallas durante el mes
     private void actualizarMetricasResumen() {
         int malas = 0;
         int pantallasAltas = 0;
@@ -274,6 +292,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
         }
     }
 
+    // ESTO SIRVE PARA: Generar dinámicamente las celdas del GridLayout (días 1 al 31) con puntos de color según calidad
     private void construirCalendarioInteractivo() {
         if (gridCalendario == null) return;
         gridCalendario.removeAllViews();
@@ -395,6 +414,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
         seleccionarDia(diaASeleccionar, regASeleccionar);
     }
 
+    // ESTO SIRVE PARA: Resaltar visualmente el día seleccionado en el calendario y desmarcar el día previo
     private void seleccionarDia(int diaNum, JSONObject reg) {
 
         if (diaSeleccionado != -1 && dayViews.containsKey(diaSeleccionado)) {
@@ -432,6 +452,7 @@ public class HistorialMensualActivity extends AppCompatActivity {
         mostrarDetalleDia(diaNum, reg);
     }
 
+    // ESTO SIRVE PARA: Desplegar la tarjeta flotante con las horas y factores de la noche al tocar un día
     private void mostrarDetalleDia(int diaNum, JSONObject reg) {
         if (cardDetalleDia == null) return;
         cardDetalleDia.setVisibility(View.VISIBLE);

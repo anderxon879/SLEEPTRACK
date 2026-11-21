@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- DISEÑO: Monitoreo Nocturno. Cronómetro gigante, tarjeta de acelerómetro y detector de pantalla encendida -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -142,6 +143,7 @@
                 android:textSize="13sp"
                 android:letterSpacing="0.04" />
 
+            <!-- ESTO SIRVE PARA: Reloj digital grande que muestra la hora actual -->
             <TextView
                 android:id="@+id/tv_hu05_reloj_grande"
                 android:layout_width="match_parent"
@@ -154,6 +156,7 @@
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium" />
 
+            <!-- ESTO SIRVE PARA: Tarjeta del cronómetro que mide el tiempo de sueño en tiempo real -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -203,6 +206,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- ESTO SIRVE PARA: Tarjeta del cronómetro que mide el tiempo de sueño en tiempo real -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -358,6 +362,7 @@
                 android:textSize="13sp"
                 android:lineSpacingExtra="2dp" />
 
+            <!-- ESTO SIRVE PARA: Botón interactivo para iniciar o detener la sesión de descanso -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_hu05_accion"
                 android:layout_width="match_parent"

@@ -1,6 +1,8 @@
+-- BASE DE DATOS SLEEPTRACK: Estructura de tablas relacionales en MySQL (InnoDB con ON DELETE CASCADE).
 CREATE DATABASE IF NOT EXISTS sleeptrack CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE sleeptrack;
 
+-- TABLA 1: CUENTAS (Almacena los usuarios, credenciales con BCrypt y perfil académico)
 CREATE TABLE IF NOT EXISTS cuentas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
@@ -18,6 +20,7 @@ CREATE TABLE IF NOT EXISTS cuentas (
     INDEX idx_correo (correo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- TABLA 2: CONFIGURACIÓN DE DESCANSO (Horarios objetivo, metas y permisos)
 CREATE TABLE IF NOT EXISTS configuracion_descanso (
     id INT AUTO_INCREMENT PRIMARY KEY,
     correo VARCHAR(100) NOT NULL,
@@ -31,6 +34,7 @@ CREATE TABLE IF NOT EXISTS configuracion_descanso (
     CONSTRAINT fk_config_cuentas FOREIGN KEY (correo) REFERENCES cuentas(correo) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- TABLA 3: REGISTROS DIARIOS (Resumen centralizado por día para dashboard e historial)
 CREATE TABLE IF NOT EXISTS registros_diarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     correo VARCHAR(100) NOT NULL,

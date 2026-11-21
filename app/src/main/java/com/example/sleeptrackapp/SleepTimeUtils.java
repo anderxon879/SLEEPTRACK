@@ -2,8 +2,10 @@ package com.example.sleeptrackapp;
 
 import java.util.Locale;
 
+// UTILIDAD: Funciones matemáticas para calcular horas entre medianoche, calidad % y formatos de tiempo.
 public class SleepTimeUtils {
 
+    // ESTO SIRVE PARA: Calcular horas y minutos entre hora de dormir y despertar, resolviendo el cruce de medianoche (+24h)
     public static int[] calcularHorasYMinutos(String horaDormirStr, String horaDespertarStr) {
         int h1 = 23, m1 = 0;
         int h2 = 7, m2 = 0;
@@ -28,10 +30,12 @@ public class SleepTimeUtils {
             }
         } catch (Exception ignored) {}
 
+        // ESTO SIRVE PARA: Convertir ambas horas a minutos del día
         int min1 = h1 * 60 + m1;
         int min2 = h2 * 60 + m2;
         int diff = min2 - min1;
 
+        // GRACIAS A ESTO: Si la resta da negativo (ej. durmió a las 23:00 y despertó a las 07:00), suma 1440 min (24 horas)
         if (diff <= 0) {
             diff += 24 * 60;
         }
@@ -41,14 +45,17 @@ public class SleepTimeUtils {
         return new int[]{horas, minutos};
     }
 
+    // ESTO SIRVE PARA: Calcular el porcentaje de calidad combinando horas dormidas vs meta y penalizando por movimientos
     public static int calcularCalidadPorcentaje(int duracionMinutosReales, int duracionMinutosMeta, int movimientosAcelerometro) {
         if (duracionMinutosReales <= 1) return 0;
         if (duracionMinutosMeta <= 0) duracionMinutosMeta = 480;
 
+        // Cumplimiento respecto a la meta (máximo 100%)
         float ratioTiempo = (float) duracionMinutosReales / duracionMinutosMeta;
         if (ratioTiempo > 1.0f) ratioTiempo = 1.0f;
         float baseCalidad = ratioTiempo * 100.0f;
 
+        // Cada movimiento brusco detectado por el acelerómetro resta 2% de calidad
         float penalizacionMovimiento = movimientosAcelerometro * 2.0f;
 
         int resultado = Math.round(baseCalidad - penalizacionMovimiento);
@@ -58,6 +65,7 @@ public class SleepTimeUtils {
         return resultado;
     }
 
+    // ESTO SIRVE PARA: Traducir el porcentaje numérico en una etiqueta descriptiva
     public static String clasificarCalidad(int porcentaje) {
         if (porcentaje >= 85) return "Muy buena";
         if (porcentaje >= 70) return "Buena";
@@ -66,6 +74,7 @@ public class SleepTimeUtils {
         return "Muy mala";
     }
 
+    // ESTO SIRVE PARA: Calcular la eficiencia porcentual del descanso
     public static int calcularEficiencia(int duracionMinutosReales, int movimientosAcelerometro) {
         if (duracionMinutosReales <= 1) return 0;
         int base;
@@ -80,6 +89,7 @@ public class SleepTimeUtils {
         return eficiencia;
     }
 
+    // ESTO SIRVE PARA: Dar formato descriptivo en texto largo para metas (ej. "8 horas de descanso" o "7 horas 30 min de descanso")
     public static String formatearDuracionTexto(int horas, int minutos) {
         if (minutos == 0) {
             return horas == 1 ? "1 hora de descanso" : horas + " horas de descanso";
@@ -89,6 +99,7 @@ public class SleepTimeUtils {
         }
     }
 
+    // ESTO SIRVE PARA: Dar formato compacto para tarjetas y gráficos (ej. "7h 15m")
     public static String formatearDuracionCorto(int horas, int minutos) {
         return String.format(Locale.getDefault(), "%dh %02dm", horas, minutos);
     }

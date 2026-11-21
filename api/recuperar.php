@@ -1,9 +1,11 @@
 <?php
+// RECUPERAR: Restablece la contraseña validando la fecha de nacimiento como pregunta de seguridad.
 header('Content-Type: application/json; charset=UTF-8');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 
+// ESTO SIRVE PARA: Conectarse a MySQL
 include 'db_connect.php';
 
 $json = file_get_contents('php://input');

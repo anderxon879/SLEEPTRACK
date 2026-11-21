@@ -22,25 +22,31 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
+// PANTALLA: Gráficos semanales. Dibuja barras con la duración de cada día y calcula el jetlag social (Lun-Vie vs Sáb-Dom).
 public class AnalisisSemanalActivity extends AppCompatActivity {
 
+    // ESTO SIRVE PARA: Declarar los botones, textos e indicadores visuales de la interfaz
     View ivVolver, btnIrCalendario;
     ImageView btnSemanaAnterior, btnSemanaSiguiente;
     TextView tvSemanaVal, tvPromedioVal, tvCumplimientoVal, tvDiasMedidosDesc, tvMetaIndicador;
     TextView tvSemVal, tvFindeVal, tvIrregularidadMsg;
     View llIrregularidad;
 
+    // ESTO SIRVE PARA: Almacenar las referencias a las 7 barras y etiquetas de texto (Lunes a Domingo)
     private View[] vBars = new View[7];
     private TextView[] tvBarVals = new TextView[7];
     private TextView[] tvBarLabels = new TextView[7];
 
+    // ESTO SIRVE PARA: Controlar la semana que se está consultando (0 = semana actual, -1 = semana pasada)
     private int offsetSemanas = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // ESTO SIRVE PARA: Cargar el diseño visual desde el archivo layout XML
         setContentView(R.layout.activity_hu15_hu16_analisis_semanal);
 
+        // ESTO SIRVE PARA: Enlazar los elementos gráficos del XML con las variables en código Java
         ivVolver = findViewById(R.id.iv_hu15_volver);
         btnIrCalendario = findViewById(R.id.btn_hu15_ir_calendario);
         btnSemanaAnterior = findViewById(R.id.btn_semana_anterior);
@@ -55,6 +61,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
         llIrregularidad = findViewById(R.id.ll_hu16_irregularidad);
         tvIrregularidadMsg = findViewById(R.id.tv_hu16_irregularidad_msg);
 
+        // ESTO SIRVE PARA: Recorrer y vincular dinámicamente las 7 barras del gráfico (de v_bar_0 a v_bar_6)
         for (int i = 0; i < 7; i++) {
             int barId = getResources().getIdentifier("v_bar_" + i, "id", getPackageName());
             int valId = getResources().getIdentifier("tv_bar_val_" + i, "id", getPackageName());
@@ -64,10 +71,12 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             tvBarLabels[i] = findViewById(labelId);
         }
 
+        // ESTO SIRVE PARA: Evento al presionar el botón de regresar
         if (ivVolver != null) {
             ivVolver.setOnClickListener(v -> volverAHistorial());
         }
 
+        // ESTO SIRVE PARA: Capturar el botón físico o gesto de 'Atrás' del celular
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -75,6 +84,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             }
         });
 
+        // ESTO SIRVE PARA: Botón que lleva directamente al calendario mensual completo
         if (btnIrCalendario != null) {
             btnIrCalendario.setOnClickListener(v -> {
                 Intent intent = new Intent(this, HistorialMensualActivity.class);
@@ -83,6 +93,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             });
         }
 
+        // ESTO SIRVE PARA: Botón para ver la semana anterior (resta 1 al offset y recarga los datos)
         if (btnSemanaAnterior != null) {
             btnSemanaAnterior.setOnClickListener(v -> {
                 offsetSemanas--;
@@ -90,6 +101,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             });
         }
 
+        // ESTO SIRVE PARA: Botón para avanzar a la siguiente semana (no permite ir al futuro)
         if (btnSemanaSiguiente != null) {
             btnSemanaSiguiente.setOnClickListener(v -> {
                 if (offsetSemanas < 0) {
@@ -101,35 +113,42 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             });
         }
 
+        // ESTO SIRVE PARA: Ejecutar la consulta inicial al backend para cargar el gráfico al abrir la pantalla
         cargarAnalisisSemanal();
 
+        // ESTO SIRVE PARA: Configurar la barra de navegación inferior para cambiar entre pantallas
         BottomNavHelper.setup(this, R.id.nav_historial);
     }
 
+    // ESTO SIRVE PARA: Enviar petición POST con Volley a la API en PHP para obtener los datos de la semana
     private void cargarAnalisisSemanal() {
         SharedPreferences prefs = getSharedPreferences("SleepTrackPrefs", MODE_PRIVATE);
         String correo = prefs.getString("correo_usuario", "");
 
+        // Si no hay correo guardado, carga datos locales de demostración
         if (correo.isEmpty()) {
-
             aplicarDatosDemo();
             return;
         }
 
+        // URL del endpoint en el servidor local XAMPP
         String url = "http://192.168.3.225/SLEEPTRACKAPP/api/obtener_analisis_semanal.php";
         JSONObject requestData = new JSONObject();
         try {
+            // ESTO SIRVE PARA: Empaquetar los datos en formato JSON para el backend
             requestData.put("correo", correo);
             requestData.put("offset_semanas", offsetSemanas);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        // ESTO SIRVE PARA: Realizar la petición HTTP con Volley y esperar la respuesta del servidor
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, requestData,
                 response -> {
                     try {
                         String status = response.getString("status");
                         if (status.equals("success")) {
+                            // Gracias a esto se procesa y dibuja la información recibida de MySQL
                             procesarRespuestaSemanal(response);
                         } else {
                             aplicarDatosDemo();
@@ -142,11 +161,14 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
                 error -> aplicarDatosDemo()
         );
 
+        // Agrega la petición a la cola de ejecución de Volley
         Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 
+    // ESTO SIRVE PARA: Extraer los datos del JSON y actualizar los textos, barras y colores del gráfico
     private void procesarRespuestaSemanal(JSONObject json) {
         try {
+            // Lee los valores calculados por la API en PHP
             String etiqueta = json.optString("etiqueta_semana", "Semana actual");
             String promedioTxt = json.optString("promedio_texto", "7h 15m");
             String cumplimientoRatio = json.optString("cumplimiento_ratio", "5 de 7");
@@ -156,6 +178,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             int diasMedidos = json.optInt("dias_medidos", 0);
             String metaTexto = json.optString("meta_texto", "8h");
 
+            // ESTO SIRVE PARA: Asignar los textos informativos en pantalla
             if (tvSemanaVal != null) tvSemanaVal.setText(etiqueta);
             if (tvPromedioVal != null) tvPromedioVal.setText(promedioTxt);
             if (tvCumplimientoVal != null) tvCumplimientoVal.setText(cumplimientoRatio);
@@ -170,10 +193,12 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
             if (tvFindeVal != null) tvFindeVal.setText(habitoFinde);
             if (tvMetaIndicador != null) tvMetaIndicador.setText("Meta: " + metaTexto);
 
+            // ESTO SIRVE PARA: Mostrar u ocultar la tarjeta de alerta de Jetlag Social según la diferencia
             if (llIrregularidad != null) {
                 llIrregularidad.setVisibility(irregularidad ? View.VISIBLE : View.GONE);
             }
 
+            // ESTO SIRVE PARA: Dibujar las 7 barras de lunes a domingo según las horas dormidas
             JSONArray diasArr = json.optJSONArray("dias");
             if (diasArr != null && diasArr.length() >= 7) {
                 float maxAlturaDp = 130f;
@@ -187,6 +212,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
                     boolean tieneReg = dia.optBoolean("tiene_registro", false);
                     String diaNombre = dia.optString("dia_nombre", "");
 
+                    // Si no hubo registro ese día, muestra barra pequeña vacía
                     if (!tieneReg) {
                         if (tvBarVals[i] != null) {
                             tvBarVals[i].setText("-");
@@ -205,6 +231,7 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
                             vBars[i].setOnClickListener(v -> CustomToast.show(this, infoDia, false));
                         }
                     } else {
+                        // Si hay registro: calcula la altura proporcional a las horas y asigna el color verde o primario
                         if (tvBarVals[i] != null) {
                             tvBarVals[i].setText(String.format(Locale.getDefault(), "%.1fh", horas));
                             tvBarVals[i].setTextColor(ContextCompat.getColor(this, R.color.text_primary));
@@ -213,10 +240,12 @@ public class AnalisisSemanalActivity extends AppCompatActivity {
                             tvBarLabels[i].setText(diaNombre.length() > 0 ? diaNombre.substring(0, 1) : "");
                         }
                         if (vBars[i] != null) {
+                            // Altura proporcional: horas / 10h multiplicada por el tamaño máximo
                             int alturaPx = (int) Math.max(18 * densidad, (horas / 10.0) * maxPx);
                             ViewGroup.LayoutParams lp = vBars[i].getLayoutParams();
                             lp.height = alturaPx;
                             vBars[i].setLayoutParams(lp);
+                            // Verde si cumplió la meta, color primario si durmió menos
                             if (cumplio) {
                                 vBars[i].setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.accent_mint)));
                             } else {

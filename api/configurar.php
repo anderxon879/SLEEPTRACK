@@ -1,9 +1,11 @@
 <?php
+// CONFIGURACIÓN: Guarda hora de dormir, despertar y meta de horas (actualiza cuentas y configuracion_descanso).
 header('Content-Type: application/json; charset=UTF-8');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 
+// ESTO SIRVE PARA: Conectarse a la base de datos MySQL
 include 'db_connect.php';
 
 $json = file_get_contents('php://input');

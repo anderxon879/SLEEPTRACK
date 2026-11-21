@@ -40,8 +40,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+// PANTALLA: Monitoreo en tiempo real. Usa el acelerómetro para movimientos y detecta si prenden la pantalla.
 public class MonitoreoActivity extends AppCompatActivity implements SensorEventListener {
 
+    // ESTO SIRVE PARA: Declarar elementos gráficos del temporizador, animaciones y contadores
     View btnVolver;
     View badgeDot;
     View vGlowHalo;
@@ -50,16 +52,19 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
     TextView tvSensorAccelEstado, tvSensorPantallaEstado;
     Button btnAccion;
 
+    // ESTO SIRVE PARA: Controlar el estado del cronómetro nocturno y el hilo de actualización de tiempo
     private boolean isMonitoring = false;
     private long startTimeMillis = 0;
     private Handler timeHandler;
     private Runnable timerRunnable;
 
+    // ESTO SIRVE PARA: Administrar el sensor de acelerómetro de hardware del teléfono
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private int contadorMovimientos = 0;
     private long ultimoMovimientoTime = 0;
 
+    // ESTO SIRVE PARA: Detectar eventos de encendido de pantalla durante la noche
     private int contadorPantallas = 0;
     private BroadcastReceiver screenReceiver;
 
@@ -67,6 +72,7 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        // ESTO SIRVE PARA: Inflar el layout XML de la pantalla de monitoreo
         setContentView(R.layout.activity_hu07_hu08_monitoreo);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -75,6 +81,7 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
             return insets;
         });
 
+        // ESTO SIRVE PARA: Vincular los botones y etiquetas del XML con las variables Java
         btnVolver = findViewById(R.id.btn_hu05_volver);
         badgeDot = findViewById(R.id.v_hu05_badge_dot);
         tvBadgeTexto = findViewById(R.id.tv_hu05_badge_texto);
@@ -87,6 +94,7 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
         tvSensorAccelEstado = findViewById(R.id.tv_hu05_sensor_accel_estado);
         tvSensorPantallaEstado = findViewById(R.id.tv_hu05_sensor_pantalla_estado);
 
+        // ESTO SIRVE PARA: Obtener el servicio de sensores de Android y seleccionar el acelerómetro físico
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -99,6 +107,7 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
         configurarEstadoInicial();
         iniciarReloj();
 
+        // ESTO SIRVE PARA: Botón principal que inicia o finaliza el monitoreo de descanso
         if (btnAccion != null) {
             btnAccion.setOnClickListener(v -> {
                 if (!isMonitoring) {
@@ -109,6 +118,7 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
             });
         }
 
+        // ESTO SIRVE PARA: Escuchar cuando el usuario enciende o desbloquea la pantalla durante la noche
         screenReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -174,12 +184,14 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
         }
     }
 
+    // ESTO SIRVE PARA: Iniciar la sesión de sueño, activar el acelerómetro y encender el cronómetro
     private void iniciarMonitoreo() {
         isMonitoring = true;
         startTimeMillis = System.currentTimeMillis();
         contadorMovimientos = 0;
         contadorPantallas = 0;
 
+        // ESTO SIRVE PARA: Registrar el listener del acelerómetro con frecuencia balanceada para cuidar batería
         if (sensorManager != null && accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
@@ -226,12 +238,15 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
         CustomToast.show(this, "Monitoreo iniciado. ¡Que descanses!", false);
     }
 
+    // ESTO SIRVE PARA: Detener el acelerómetro, calcular duración, calidad y enviar datos a api/guardar_monitoreo.php
     private void finalizarMonitoreo() {
         isMonitoring = false;
         long finMillis = System.currentTimeMillis();
 
+        // Libera la bandera de pantalla encendida
         getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        // ESTO SIRVE PARA: Desactivar el acelerómetro para ahorrar batería inmediatamente
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
@@ -303,19 +318,23 @@ public class MonitoreoActivity extends AppCompatActivity implements SensorEventL
         finish();
     }
 
+    // ESTO SIRVE PARA: Capturar movimientos físicos en tiempo real con el acelerómetro (Hardware)
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (!isMonitoring || event.sensor.getType() != Sensor.TYPE_ACCELEROMETER) {
             return;
         }
 
+        // Lectura de los 3 ejes espaciales (X, Y, Z)
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
 
+        // ESTO SIRVE PARA: Calcular la magnitud del vector resultante y restarle la gravedad de la Tierra (9.81 m/s²)
         float gVector = (float) Math.sqrt(x * x + y * y + z * z);
         float deltaG = Math.abs(gVector - SensorManager.GRAVITY_EARTH);
 
+        // Si la variación supera el umbral de 2.2 m/s², se cuenta como movimiento corporal nocturno
         if (deltaG > 2.2f) {
             long currentTime = System.currentTimeMillis();
             if (currentTime - ultimoMovimientoTime > 1800) {

@@ -25,8 +25,10 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
+// PANTALLA: Configuración de descanso. Define hora de dormir, despertar y meta de horas diarias (sincroniza con api/configurar.php).
 public class ConfigurarDescansoActivity extends AppCompatActivity {
 
+    // ESTO SIRVE PARA: Declarar botones, textos de horas objetivo y switches de recordatorio
     View ivVolver;
     TextView tvHoraDormirVal, tvHoraDespertarVal, tvMetaVal;
     MaterialSwitch switchRecordatorio, switchGuardarLocal;
@@ -36,14 +38,17 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        // ESTO SIRVE PARA: Cargar el layout XML de configuración de horas y metas de descanso
         setContentView(R.layout.activity_hu06_configurar_descanso);
 
+        // ESTO SIRVE PARA: Ajustar márgenes para evitar solapamientos con las barras del sistema
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        // ESTO SIRVE PARA: Enlazar los controles visuales del layout XML con los objetos Java
         ivVolver = findViewById(R.id.iv_hu04_volver);
         tvHoraDormirVal = findViewById(R.id.tv_hu04_hora_dormir_val);
         tvHoraDespertarVal = findViewById(R.id.tv_hu04_hora_despertar_val);
@@ -52,10 +57,12 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
         switchGuardarLocal = findViewById(R.id.switch_hu04_guardar_local);
         btnGuardarConfiguracion = findViewById(R.id.btn_hu04_guardar_configuracion);
 
+        // ESTO SIRVE PARA: Regresar a la pantalla anterior o al inicio al presionar la flecha
         if (ivVolver != null) {
             ivVolver.setOnClickListener(v -> salirConfiguracion());
         }
 
+        // ESTO SIRVE PARA: Manejar el botón físico de retroceso del teléfono
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -63,20 +70,24 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
             }
         });
 
+        // ESTO SIRVE PARA: Cargar los horarios previamente guardados en SharedPreferences
         SharedPreferences prefs = getSharedPreferences("SleepTrackPrefs", MODE_PRIVATE);
         String savedHoraDormir = prefs.getString("hora_dormir", "23:00");
         String savedHoraDespertar = prefs.getString("hora_despertar", "07:00");
         if (tvHoraDormirVal != null) tvHoraDormirVal.setText(savedHoraDormir);
         if (tvHoraDespertarVal != null) tvHoraDespertarVal.setText(savedHoraDespertar);
 
+        // ESTO SIRVE PARA: Calcular automáticamente las horas y minutos resultantes
         actualizarCalculoDescanso();
 
+        // ESTO SIRVE PARA: Abrir el selector interactivo TimePickerDialog para la hora de acostarse
         if (tvHoraDormirVal != null) {
             tvHoraDormirVal.setOnClickListener(v -> mostrarSelectorHora(tvHoraDormirVal, true));
             if (tvHoraDormirVal.getParent() instanceof View) {
                 ((View) tvHoraDormirVal.getParent()).setOnClickListener(v -> mostrarSelectorHora(tvHoraDormirVal, true));
             }
         }
+        // ESTO SIRVE PARA: Abrir el selector interactivo TimePickerDialog para la hora de levantarse
         if (tvHoraDespertarVal != null) {
             tvHoraDespertarVal.setOnClickListener(v -> mostrarSelectorHora(tvHoraDespertarVal, false));
             if (tvHoraDespertarVal.getParent() instanceof View) {
@@ -84,11 +95,13 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
             }
         }
 
+        // ESTO SIRVE PARA: Guardar la configuración en MySQL mediante Volley hacia api/configurar.php
         if (btnGuardarConfiguracion != null) {
             btnGuardarConfiguracion.setOnClickListener(v -> {
                 String hDormir = tvHoraDormirVal != null ? tvHoraDormirVal.getText().toString() : "23:00";
                 String hDespertar = tvHoraDespertarVal != null ? tvHoraDespertarVal.getText().toString() : "07:00";
 
+                // ESTO SIRVE PARA: Calcular la duración entre horas con el algoritmo que resuelve la medianoche
                 int[] dur = SleepTimeUtils.calcularHorasYMinutos(hDormir, hDespertar);
                 String durTexto = SleepTimeUtils.formatearDuracionTexto(dur[0], dur[1]);
                 String durCorto = SleepTimeUtils.formatearDuracionCorto(dur[0], dur[1]);
@@ -96,8 +109,10 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
                 String correo = prefs.getString("correo_usuario", "");
                 int sensoresAceptados = prefs.getBoolean("sensores_aceptados", false) ? 1 : 0;
 
+                // ESTO SIRVE PARA: URL del endpoint PHP en XAMPP que actualiza la configuración en la base de datos
                 String url = "http://192.168.3.225/SLEEPTRACKAPP/api/configurar.php";
 
+                // ESTO SIRVE PARA: Empaquetar la configuración horaria del estudiante en JSON
                 JSONObject requestData = new JSONObject();
                 try {
                     requestData.put("correo", correo);
@@ -111,6 +126,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
 
                 btnGuardarConfiguracion.setEnabled(false);
 
+                // ESTO SIRVE PARA: Enviar la petición HTTP POST asíncrona mediante la librería Volley
                 JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, requestData,
                         response -> {
                             btnGuardarConfiguracion.setEnabled(true);
@@ -118,6 +134,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
                                 String status = response.getString("status");
                                 String message = response.getString("message");
 
+                                // GRACIAS A ESTO: Si el guardado es exitoso, actualiza el caché de SharedPreferences en el móvil
                                 if (status.equals("success")) {
                                     SharedPreferences.Editor editor = prefs.edit();
                                     editor.putString("hora_dormir", hDormir);
@@ -131,6 +148,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
 
                                     CustomToast.show(ConfigurarDescansoActivity.this, "Configuración guardada correctamente", false);
 
+                                    // ESTO SIRVE PARA: Si vino desde la pantalla Perfil, solo cierra; si es primer registro, va al Dashboard
                                     boolean desdePerfil = getIntent().getBooleanExtra("desde_perfil", false);
                                     if (desdePerfil) {
                                         finish();
@@ -148,6 +166,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
                             }
                         },
                         error -> {
+                            // En caso de estar sin conexión, persiste la configuración en la memoria local del dispositivo
                             btnGuardarConfiguracion.setEnabled(true);
 
                             SharedPreferences.Editor editor = prefs.edit();
@@ -177,6 +196,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
         }
     }
 
+    // ESTO SIRVE PARA: Recalcular en tiempo real el tiempo de descanso estimado entre hora de dormir y despertar
     private void actualizarCalculoDescanso() {
         String hDormir = tvHoraDormirVal != null ? tvHoraDormirVal.getText().toString() : "23:00";
         String hDespertar = tvHoraDespertarVal != null ? tvHoraDespertarVal.getText().toString() : "07:00";
@@ -189,6 +209,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
         }
     }
 
+    // ESTO SIRVE PARA: Desplegar el selector de hora nativo (reloj interactivo) TimePickerDialog
     private void mostrarSelectorHora(TextView targetView, boolean esHoraDormir) {
         String currentText = targetView.getText().toString();
         int horaDefecto = esHoraDormir ? 23 : 7;
@@ -217,6 +238,7 @@ public class ConfigurarDescansoActivity extends AppCompatActivity {
         timePickerDialog.show();
     }
 
+    // ESTO SIRVE PARA: Controlar la navegación de salida según si el usuario proviene de Perfil o del registro inicial
     private void salirConfiguracion() {
         boolean desdePerfil = getIntent().getBooleanExtra("desde_perfil", false);
         if (desdePerfil) {

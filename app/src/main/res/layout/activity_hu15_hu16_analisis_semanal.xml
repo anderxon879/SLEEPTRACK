@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- DISEÑO: Gráficos Semanales. 7 barras interactivas con duración, promedios y alerta de jetlag social -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -75,6 +76,7 @@
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium" />
 
+                <!-- ESTO SIRVE PARA: Selector de semana con flechas para retroceder o avanzar entre semanas -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
@@ -128,6 +130,7 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- ESTO SIRVE PARA: Tarjeta del gráfico de 7 barras interactivas con cálculo de altura según horas dormidas -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -518,6 +521,7 @@
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
 
+                <!-- ESTO SIRVE PARA: Comparación de horarios de días laborales vs fin de semana (Detección de Jetlag Social) -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

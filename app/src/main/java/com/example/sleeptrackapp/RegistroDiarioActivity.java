@@ -20,12 +20,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+// PANTALLA: Encuesta diaria. Guarda cómo durmió el alumno (estrés, cafeína, pantallas) en api/guardar_registro.php.
 public class RegistroDiarioActivity extends AppCompatActivity {
 
+    // ESTO SIRVE PARA: Declarar el botón volver, etiqueta de fecha y botón de guardar
     View ivVolver;
     TextView tvFecha;
     Button btnGuardar;
 
+    // ESTO SIRVE PARA: Almacenar los valores seleccionados por el alumno en cada categoría de la encuesta
     private String calidadSeleccionada = "Regular";
     private String energiaSeleccionada = "Normal";
     private String interrupcionesSeleccionadas = "3";
@@ -36,8 +39,10 @@ public class RegistroDiarioActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // ESTO SIRVE PARA: Inflar el layout XML de la encuesta matutina
         setContentView(R.layout.activity_hu09_hu10_hu11_registro_diario);
 
+        // ESTO SIRVE PARA: Vincular los botones y textos del XML con las variables en Java
         ivVolver = findViewById(R.id.iv_hu09_volver);
         tvFecha = findViewById(R.id.tv_hu09_fecha);
         btnGuardar = findViewById(R.id.btn_hu11_guardar);
@@ -46,9 +51,11 @@ public class RegistroDiarioActivity extends AppCompatActivity {
             ivVolver.setOnClickListener(v -> volverAInicio());
         }
 
+        // ESTO SIRVE PARA: Mostrar la fecha actual en formato legible (ej. "Noche del 21 de Noviembre")
         String fechaHoy = new SimpleDateFormat("dd 'de' MMMM", new Locale("es", "ES")).format(new Date());
         if (tvFecha != null) tvFecha.setText("Noche del " + fechaHoy);
 
+        // ESTO SIRVE PARA: Inicializar los grupos de botones de opción (chips) para cada pregunta
         configurarOpcionesCalidad();
         configurarOpcionesEnergia();
         configurarOpcionesInterrupciones();
@@ -56,10 +63,12 @@ public class RegistroDiarioActivity extends AppCompatActivity {
         configurarOpcionesCafeina();
         configurarOpcionesPantallas();
 
+        // ESTO SIRVE PARA: Botón final que envía las respuestas al servidor MySQL
         if (btnGuardar != null) {
             btnGuardar.setOnClickListener(v -> guardarRegistro());
         }
 
+        // ESTO SIRVE PARA: Configurar la barra de navegación inferior (pestaña Registrar activa)
         BottomNavHelper.setup(this, R.id.nav_registrar);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -251,6 +260,7 @@ public class RegistroDiarioActivity extends AppCompatActivity {
         }
     }
 
+    // ESTO SIRVE PARA: Empaquetar las respuestas en JSON y enviarlas por POST con Volley a api/guardar_registro.php
     private void guardarRegistro() {
         SharedPreferences prefs = getSharedPreferences("SleepTrackPrefs", MODE_PRIVATE);
         String correo = prefs.getString("correo_usuario", "");
@@ -260,8 +270,10 @@ public class RegistroDiarioActivity extends AppCompatActivity {
             return;
         }
 
+        // Endpoint de registro diario en XAMPP
         String url = "http://192.168.3.225/SLEEPTRACKAPP/api/guardar_registro.php";
 
+        // ESTO SIRVE PARA: Crear el objeto JSON con todos los factores de higiene respondidos
         JSONObject requestData = new JSONObject();
         try {
             requestData.put("correo", correo);
@@ -278,6 +290,7 @@ public class RegistroDiarioActivity extends AppCompatActivity {
 
         btnGuardar.setEnabled(false);
 
+        // ESTO SIRVE PARA: Enviar la petición HTTP asíncrona a la base de datos MySQL
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, requestData,
                 response -> {
                     btnGuardar.setEnabled(true);
@@ -302,6 +315,7 @@ public class RegistroDiarioActivity extends AppCompatActivity {
                 }
         );
 
+        // Agrega la petición a la cola de Volley
         Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 }
